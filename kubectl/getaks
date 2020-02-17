@@ -17,11 +17,11 @@ if [ "$1" == "-f" ]; then
 	shift
 fi
 
-for (( i = 0; i <= $((length-1)); i++ )); do 
+for (( i = 0; i <= length - 1; i++ )); do 
 	az account set -s $(jq -r ".[$i]" <<<$JSON)
 	JSON2=$(az aks list --query "[].[name,resourceGroup]")
 	length2=$(jq -r '. | length' <<<$JSON2)
-	for (( j = 0; j <= $((length2-1)); j++ )); do
+	for (( j = 0; j <= length2 - 1; j++ )); do
 		AKS=$(jq -r ".[$j][0]" <<<$JSON2)
 		RG=$(jq -r ".[$j][1]" <<<$JSON2)
 		az aks get-credentials --name "$AKS" --resource-group "$RG" $FORCE
