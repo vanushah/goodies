@@ -1,11 +1,13 @@
 #!/bin/bash
-if [ ! -x "$(which jq)" ]; then
-	echo "You'll need jq tool in order this script to work."
-	echo
-	echo "Please install it with appropriate way for your system!"
-	echo
-	exit 1
-fi
+for tool in jq az; do 
+	if [ ! -x "$(which $tool)" ]; then
+		echo "You'll need $tool tool in order this script to work."
+		echo
+		echo "Please install it with appropriate way for your system!"
+		echo
+		exit 1
+	fi
+done
 
 JSON=$(az account list --query '[].name')
 length=$(jq -r '. | length' <<<$JSON)
