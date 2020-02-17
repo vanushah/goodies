@@ -1,0 +1,27 @@
+#!/bin/bash
+if [ ! -x "$(which jq)" ]; then
+	echo "You'll need jq tool in order this script to work."
+	echo
+	echo "Please install it with appropriate way for your system!"
+	echo
+	exit 1
+fi
+
+JSON=$(az account list --query '[].name')
+length=$(jq -r '. | length' <<<$JSON)
+
+if [ "$1" == "-f" ]; then
+	FORCE="--overwrite-existing"
+	shift
+fi
+
+for (( i = 1; i <= $length; i++ )); do 
+	az account set -s $(jq -r ".[$((i-1))]" <<<$JSON)
+	JSON2=$(az aks list --query "[].[name,resourceGroup]")
+	length2=$(jq -r '. | length' <<<$JSON2)
+	for (( j = 1; j <= $length2; j++ )); do
+		AKS=$(jq -r ".[$((j-1))][0]" <<<$JSON2)
+		RG=$(jq -r ".[$((j-1))][1]" <<<$JSON2)
+		az aks get-credentials --name "$AKS" --resource-group "$RG" $FORCE
+	done
+done
