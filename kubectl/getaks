@@ -29,6 +29,10 @@ for (( i = 0; i <= length - 1; i++ )); do
 		AKS=$(jq -r ".[$j][0]" <<<$JSON2)
 		RG=$(jq -r ".[$j][1]" <<<$JSON2)
 		# Merging the credentials per AKS
-		az aks get-credentials --name "$AKS" --resource-group "$RG" $FORCE
+		if az aks get-credentials --name "$AKS" --resource-group "$RG" $FORCE &>/dev/null; then
+			echo "Successfully merged $AKS into Kube-config"
+		else
+			echo "$AKS merge failed"
+		fi
 	done
 done
