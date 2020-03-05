@@ -21,7 +21,7 @@ fi
 
 for (( i = 0; i <= length - 1; i++ )); do 
 	# Setting the subscription
-	az account set -s $(jq -r ".[$i]" <<<$JSON)
+	az account set -s "$(jq -r ".[$i]" <<<$JSON)"
 	# Getting the list of AKSes
 	JSON2=$(az aks list --query "[].[name,resourceGroup]")
 	length2=$(jq -r '. | length' <<<$JSON2)
