@@ -9,21 +9,26 @@ for tool in jq az; do
 	fi
 done
 
+# Getting the list of subscriptions
 JSON=$(az account list --query '[].name')
 length=$(jq -r '. | length' <<<$JSON)
 
+# Checking if owerwrite flag is set
 if [ "$1" == "-f" ]; then
 	FORCE="--overwrite-existing"
 	shift
 fi
 
 for (( i = 0; i <= length - 1; i++ )); do 
+	# Setting the subscription
 	az account set -s $(jq -r ".[$i]" <<<$JSON)
+	# Getting the list of AKSes
 	JSON2=$(az aks list --query "[].[name,resourceGroup]")
 	length2=$(jq -r '. | length' <<<$JSON2)
 	for (( j = 0; j <= length2 - 1; j++ )); do
 		AKS=$(jq -r ".[$j][0]" <<<$JSON2)
 		RG=$(jq -r ".[$j][1]" <<<$JSON2)
+		# Merging the credentials per AKS
 		az aks get-credentials --name "$AKS" --resource-group "$RG" $FORCE
 	done
 done
