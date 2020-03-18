@@ -9,15 +9,23 @@ for tool in jq az; do
 	fi
 done
 
-# Getting the list of subscriptions
-JSON=$(az account list --query '[].name')
-length=$(jq -r '. | length' <<<$JSON)
-
 # Checking if owerwrite flag is set
 if [ "$1" == "-f" ]; then
 	FORCE="--overwrite-existing"
 	shift
 fi
+
+# Constructing JSON from input arguments array
+if [ ${#@} -gt 0 ]; then
+	x=("$@")
+	JSON=$(printf '%s\n' "${x[@]}" | jq -R . | jq -s .)
+fi
+
+# Getting the list of subscriptions
+
+[ -z "$JSON" ] && JSON=$(az account list --query '[].name')
+length=$(jq -r '. | length' <<<$JSON)
+
 
 for (( i = 0; i <= length - 1; i++ )); do 
 	# Setting the subscription
