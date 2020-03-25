@@ -9,11 +9,30 @@ for tool in jq az; do
 	fi
 done
 
+function aksver() {
+	az aks list --query '[].[name, kubernetesVersion]'
+}
+
 # Checking if owerwrite flag is set
-if [ "$1" == "-f" ]; then
-	FORCE="--overwrite-existing"
+while [ -n "$1" ]; do
+	case "$1" in 
+		"-f")
+		FORCE="--overwrite-existing"
+		;;
+		"-q")
+		shift
+		QUERY=$1
+		;;
+		"--")
+		shift
+		break
+		;;
+		*)
+		;;
+	esac
 	shift
-fi
+done
+
 
 # Constructing JSON from input arguments array
 if [ ${#@} -gt 0 ]; then
@@ -30,17 +49,21 @@ length=$(jq -r '. | length' <<<$JSON)
 for (( i = 0; i <= length - 1; i++ )); do 
 	# Setting the subscription
 	az account set -s "$(jq -r ".[$i]" <<<$JSON)"
-	# Getting the list of AKSes
-	JSON2=$(az aks list --query "[].[name,resourceGroup]")
-	length2=$(jq -r '. | length' <<<$JSON2)
-	for (( j = 0; j <= length2 - 1; j++ )); do
-		AKS=$(jq -r ".[$j][0]" <<<$JSON2)
-		RG=$(jq -r ".[$j][1]" <<<$JSON2)
-		# Merging the credentials per AKS
-		if az aks get-credentials --name "$AKS" --resource-group "$RG" $FORCE &>/dev/null; then
-			echo "Successfully merged $AKS into Kube-config"
-		else
-			echo "$AKS merge failed"
-		fi
-	done
+	if [ -n "$QUERY" ]; then
+		$QUERY
+	else
+		# Getting the list of AKSes
+		JSON2=$(az aks list --query "[].[name,resourceGroup]")
+		length2=$(jq -r '. | length' <<<$JSON2)
+		for (( j = 0; j <= length2 - 1; j++ )); do
+			AKS=$(jq -r ".[$j][0]" <<<$JSON2)
+			RG=$(jq -r ".[$j][1]" <<<$JSON2)
+			# Merging the credentials per AKS
+			if az aks get-credentials --name "$AKS" --resource-group "$RG" $FORCE &>/dev/null; then
+				echo "Successfully merged $AKS into Kube-config"
+			else
+				echo "$AKS merge failed"
+			fi
+		done
+	fi
 done
