@@ -1,5 +1,5 @@
 # goodies
-`kubectl/getaks` — a script for adding all AKSes to your `~/.kube/config` from all available to you Azure subscriptions per Cloud
+`kubectl/getaks` — скрипт добавления всех AKS'ов из всех доступных подписок в ваш `~/.kube/config`. Скрипт надо запускать по-облачно, т.е. для каждого облака (AzureCloud, AzureChinaCloud и т.д.) отдельно.
 ## caveat emptor
 По-умолчанию `getaks` лучше запускать с ключом `-f` чтобы включался автоматический режим перезаписи контекста, если контекст с таким же именем существует. Иначе скрипт может застрять на какой-то подписке.
 
