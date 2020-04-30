@@ -9,16 +9,23 @@ case "${unameOut}" in
     *)          echo "Sorry, your OS is probably unsupported"; exit 5
 esac
 
+function print_missing_tool () {
+	echo "You'll need $1 tool in order this script to work."
+        echo
+        echo "Please install it with appropriate way for your system!"
+        echo
+      	exit 1
+}
 
-for tool in jq $az_cmd; do 
-	if [ ! -x "$(which $tool)" ]; then
-		echo "You'll need $tool tool in order this script to work."
-		echo
-		echo "Please install it with appropriate way for your system!"
-		echo
-		exit 1
-	fi
+for tool in jq; do 
+	if [ ! -x "$(which $tool 2>/dev/null)" ]; then print_missing_tool $tool; fi
 done
+
+if [ "$az_cmd" == "az" ]; then
+	if [ ! -x "$(which az)" ]; then print_missing_tool az; fi
+elif [ "$az_cmd" == "az.cmd" ]; then
+	if ! where az.cmd &>/dev/null; then print_missing_tool az.cmd; fi
+fi
 
 function aksver() {
 	$az_cmd aks list --query '[].[name, kubernetesVersion]'
