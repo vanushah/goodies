@@ -42,7 +42,7 @@ done
 
 # Constructing JSON from input arguments array
 if [ ${#@} -gt 0 ]; then
-	SUBS=("$@")
+	SUBS=$@
 fi
 
 # Getting the list of subscriptions
