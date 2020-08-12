@@ -9,18 +9,6 @@ case "${unameOut}" in
     *)          echo "Sorry, your OS is probably unsupported"; exit 5
 esac
 
-function print_missing_tool () {
-	echo "You'll need $1 tool in order this script to work."
-        echo
-        echo "Please install it with appropriate way for your system!"
-        echo
-      	exit 1
-}
-
-for tool in jq; do 
-	if [ ! -x "$(which $tool 2>/dev/null)" ]; then print_missing_tool $tool; fi
-done
-
 if [ "$az_cmd" == "az" ]; then
 	if [ ! -x "$(which az)" ]; then print_missing_tool az; fi
 elif [ "$az_cmd" == "az.cmd" ]; then
@@ -54,28 +42,21 @@ done
 
 # Constructing JSON from input arguments array
 if [ ${#@} -gt 0 ]; then
-	x=("$@")
-	JSON=$(printf '%s\n' "${x[@]}" | jq -R . | jq -s .)
+	SUBS=("$@")
 fi
 
 # Getting the list of subscriptions
 
-[ -z "$JSON" ] && JSON=$($az_cmd account list --query '[].name')
-length=$(jq -r '. | length' <<<$JSON)
+[ -z "$SUBS" ] && SUBS=$($az_cmd account list --query '[].name' -o tsv)
 
-
-for (( i = 0; i <= length - 1; i++ )); do 
+for subscription in ${SUBS}; do 
 	# Setting the subscription
-	$az_cmd account set -s "$(jq -r ".[$i]" <<<$JSON)"
+	$az_cmd account set -s "${subscription}"
 	if [ -n "$QUERY" ]; then
 		$QUERY
 	else
 		# Getting the list of AKSes
-		JSON2=$($az_cmd aks list --query "[].[name,resourceGroup]")
-		length2=$(jq -r '. | length' <<<$JSON2)
-		for (( j = 0; j <= length2 - 1; j++ )); do
-			AKS=$(jq -r ".[$j][0]" <<<$JSON2)
-			RG=$(jq -r ".[$j][1]" <<<$JSON2)
+		$az_cmd aks list --query "[].[name,resourceGroup]" -o tsv | while read AKS RG; do
 			# Merging the credentials per AKS
 			if $az_cmd aks get-credentials --name "$AKS" --resource-group "$RG" $FORCE &>/dev/null; then
 				echo "Successfully merged $AKS into Kube-config"
