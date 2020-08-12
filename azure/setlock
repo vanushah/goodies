@@ -1,0 +1,7 @@
+#!/bin/bash
+for subscription in $(az account list --query '[].name' -o tsv); do
+	az account set -s ${subscription}
+	for keyvault_id in $(az keyvault list -o tsv --query '[].id'); do
+		az lock create --name delete-lock-for-akv --lock-type CanNotDelete --resource "${keyvault_id}"
+	done
+done
