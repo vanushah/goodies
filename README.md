@@ -9,6 +9,8 @@
 
 `./getaks [args] -- <subscription-1> ... <subscription-N>`
 
+Скрипт проверен в трёх средах: Linux, MacOS и CYGWIN/MINGW
+
 ***
 
 `azure/setlock` — элегантный скрипт для установки delete lock'ов на все ваши KeyVault'ы
